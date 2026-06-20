@@ -32,9 +32,16 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Lint Check
+      - name: Backend Tests
+        working-directory: backend
+        run: npx vitest run
+        env:
+          DATABASE_URL: "file:./dev.db"
+          JWT_SECRET: "ci_test_secret"
+
+      - name: Frontend Tests
         working-directory: frontend
-        run: npx eslint src/ --ext .js,.jsx --max-warnings 0 --no-error-on-unmatched-pattern || echo "ESLint not configured yet"
+        run: npx vitest run
 
       - name: Backend Build Check
         working-directory: backend

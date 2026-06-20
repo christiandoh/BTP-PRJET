@@ -3,12 +3,14 @@ const { PrismaClient } = require('@prisma/client');
 const auth = require('../middleware/auth');
 const { validate } = require('../errors');
 const { contactSchema } = require('../validation');
+const { emitToAdmin } = require('../socket');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 router.post('/', validate(contactSchema), async (req, res) => {
   const message = await prisma.contactMessage.create({ data: req.body });
+  emitToAdmin('new-message', { id: message.id, name: message.name, subject: message.subject, createdAt: message.createdAt });
   res.json({ message: 'Message envoyé avec succès', id: message.id });
 });
 

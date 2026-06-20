@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -13,9 +14,15 @@ const contactRoutes = require('./routes/contact');
 const statsRoutes = require('./routes/stats');
 const uploadRoutes = require('./routes/upload');
 const { errorHandler, notFound } = require('./errors');
+const { initSentry } = require('./sentry');
+const { cacheMiddleware } = require('./cache');
+const { initSocket } = require('./socket');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
+
+initSentry(app);
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000', credentials: true }));
@@ -38,11 +45,13 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/contact', contactRoutes);
-app.use('/api/stats', statsRoutes);
+app.use('/api/stats', cacheMiddleware(60), statsRoutes);
 app.use('/api/upload', uploadRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+initSocket(server);
+
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
