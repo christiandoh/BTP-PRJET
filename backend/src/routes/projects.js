@@ -1,11 +1,23 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const auth = require('../middleware/auth');
+const { validate, projectSchema } = require('../errors');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 router.get('/', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 12;
+  const skip = (page - 1) * limit;
+  const [data, total] = await Promise.all([
+    prisma.project.findMany({ orderBy: { createdAt: 'desc' }, skip, take: limit }),
+    prisma.project.count(),
+  ]);
+  res.json({ data, total, page, limit, pages: Math.ceil(total / limit) });
+});
+
+router.get('/all', async (req, res) => {
   const projects = await prisma.project.findMany({ orderBy: { createdAt: 'desc' } });
   res.json(projects);
 });
@@ -16,12 +28,12 @@ router.get('/:id', async (req, res) => {
   res.json(project);
 });
 
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, validate(projectSchema), async (req, res) => {
   const project = await prisma.project.create({ data: req.body });
   res.json(project);
 });
 
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', auth, validate(projectSchema), async (req, res) => {
   const project = await prisma.project.update({
     where: { id: parseInt(req.params.id) },
     data: req.body,

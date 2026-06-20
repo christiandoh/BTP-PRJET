@@ -3,11 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 const auth = require('../middleware/auth');
+const { validate, loginSchema } = require('../errors');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.post('/login', async (req, res) => {
+router.post('/login', validate(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
     const admin = await prisma.admin.findUnique({ where: { email } });

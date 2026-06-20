@@ -8,13 +8,28 @@ api.interceptors.request.use(config => {
   return config
 })
 
+api.interceptors.response.use(
+  r => r,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('admin')
+      if (window.location.pathname.startsWith('/admin/dashboard')) {
+        window.location.href = '/admin'
+      }
+    }
+    return Promise.reject(err)
+  }
+)
+
 export const auth = {
   login: data => api.post('/auth/login', data).then(r => r.data),
   me: () => api.get('/auth/me').then(r => r.data),
 }
 
 export const projects = {
-  getAll: () => api.get('/projects').then(r => r.data),
+  getAll: (page = 1, limit = 12) => api.get(`/projects?page=${page}&limit=${limit}`).then(r => r.data),
+  getAllFlat: () => api.get('/projects/all').then(r => r.data),
   get: id => api.get(`/projects/${id}`).then(r => r.data),
   create: data => api.post('/projects', data).then(r => r.data),
   update: (id, data) => api.put(`/projects/${id}`, data).then(r => r.data),
@@ -35,7 +50,7 @@ export const services = {
 
 export const contact = {
   send: data => api.post('/contact', data).then(r => r.data),
-  getAll: () => api.get('/contact').then(r => r.data),
+  getAll: (page = 1, limit = 20) => api.get(`/contact?page=${page}&limit=${limit}`).then(r => r.data),
   markRead: id => api.put(`/contact/${id}/read`).then(r => r.data),
   delete: id => api.delete(`/contact/${id}`).then(r => r.data),
 }
@@ -50,10 +65,6 @@ export const uploads = {
     fd.append('image', file)
     return api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data)
   },
-}
-
-export const assistant = {
-  query: (msg) => api.post('/assistant', { message: msg }).then(r => r.data),
 }
 
 export default api

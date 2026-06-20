@@ -215,6 +215,8 @@ a { text-decoration: none; }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,0.05); padding: 1.5rem 0; text-align: center; }
 .footer-bottom p { color: rgba(255,255,255,0.25); font-size: 0.82rem; }
 
+@keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 .reveal { opacity: 0; transform: translateY(50px); transition: all 0.9s; }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 

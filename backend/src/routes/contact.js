@@ -1,18 +1,25 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const auth = require('../middleware/auth');
+const { validate, contactSchema } = require('../errors');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.post('/', async (req, res) => {
+router.post('/', validate(contactSchema), async (req, res) => {
   const message = await prisma.contactMessage.create({ data: req.body });
   res.json({ message: 'Message envoyé avec succès', id: message.id });
 });
 
 router.get('/', auth, async (req, res) => {
-  const messages = await prisma.contactMessage.findMany({ orderBy: { createdAt: 'desc' } });
-  res.json(messages);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+  const [messages, total] = await Promise.all([
+    prisma.contactMessage.findMany({ orderBy: { createdAt: 'desc' }, skip, take: limit }),
+    prisma.contactMessage.count(),
+  ]);
+  res.json({ data: messages, total, page, limit, pages: Math.ceil(total / limit) });
 });
 
 router.put('/:id/read', auth, async (req, res) => {

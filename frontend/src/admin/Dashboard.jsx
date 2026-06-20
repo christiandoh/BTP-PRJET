@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import { projects as projectsApi, testimonials as testimonialsApi, contact as contactApi, stats as statsApi, uploads as uploadsApi } from '../api'
+import { CardSkeleton, StatCardSkeleton } from '../components/Skeleton'
 
 function Sidebar({ active }) {
   const nav = useNavigate()
@@ -88,7 +89,15 @@ function HomeStats() {
   const [data, setData] = useState(null)
   useEffect(() => { statsApi.get().then(setData).catch(() => {}) }, [])
 
-  if (!data) return <div style={{ padding: '2rem', color: '#6b6b80' }}>Chargement...</div>
+  if (!data) return (
+    <div>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.8rem', marginBottom: '0.5rem' }}>Tableau de bord</h2>
+      <p style={{ color: '#6b6b80', marginBottom: '2rem' }}>Chargement des données...</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+        {[1,2,3,4].map(i => <StatCardSkeleton key={i} />)}
+      </div>
+    </div>
+  )
 
   const pieData = [
     { name: 'Lus', value: data.read, color: '#2ecc71' },
@@ -308,38 +317,71 @@ function TestimonialsList() {
 
 function MessagesList() {
   const [list, setList] = useState([])
+  const [page, setPage] = useState(1)
+  const [pages, setPages] = useState(1)
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => { load() }, [])
-  const load = async () => { try { setList(await contactApi.getAll()) } catch {} }
+  useEffect(() => { load() }, [page])
+  const load = async () => {
+    setLoading(true)
+    try {
+      const res = await contactApi.getAll(page)
+      setList(res.data || [])
+      setPages(res.pages || 1)
+    } catch {}
+    setLoading(false)
+  }
 
   const markRead = async (id) => { await contactApi.markRead(id); load() }
   const del = async (id) => { if (confirm('Supprimer ce message ?')) { await contactApi.delete(id); load() } }
 
   return (
     <div>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.8rem', marginBottom: '2rem' }}>Messages reçus</h2>
-      {list.length === 0 && <p style={{ color: '#6b6b80' }}>Aucun message.</p>}
-      {list.map(m => (
-        <Card key={m.id}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-                <strong>{m.name}</strong>
-                <span style={{ color: '#6b6b80', fontSize: '0.85rem' }}>{m.email}</span>
-                {!m.read && <span style={{ background: '#C8A45C', color: 'white', fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: 4 }}>Nouveau</span>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.8rem' }}>Messages reçus</h2>
+      </div>
+      {loading ? (
+        <div style={{ display: 'grid', gap: '1rem' }}>
+          {[1,2,3].map(i => <CardSkeleton key={i} />)}
+        </div>
+      ) : list.length === 0 ? (
+        <p style={{ color: '#6b6b80' }}>Aucun message.</p>
+      ) : (
+        <div style={{ display: 'grid', gap: '1rem' }}>
+          {list.map(m => (
+            <Card key={m.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
+                    <strong>{m.name}</strong>
+                    <span style={{ color: '#6b6b80', fontSize: '0.85rem' }}>{m.email}</span>
+                    {!m.read && <span style={{ background: '#C8A45C', color: 'white', fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: 4 }}>Nouveau</span>}
+                  </div>
+                  <p style={{ fontSize: '0.9rem', marginBottom: '0.3rem' }}><strong>Sujet :</strong> {m.subject}</p>
+                  {m.service && <p style={{ fontSize: '0.85rem', color: '#6b6b80' }}>Service : {m.service}</p>}
+                  <p style={{ fontSize: '0.9rem', color: '#6b6b80', marginTop: '0.5rem' }}>{m.message}</p>
+                  <p style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.5rem' }}>{new Date(m.createdAt).toLocaleDateString('fr-FR')} à {new Date(m.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginLeft: '1rem' }}>
+                  {!m.read && <button onClick={() => markRead(m.id)} style={{ padding: '0.4rem 0.8rem', cursor: 'pointer', border: '1px solid #ddd', borderRadius: 6, background: 'white', fontSize: '0.8rem' }}>Lu</button>}
+                  <button onClick={() => del(m.id)} style={{ padding: '0.4rem 0.8rem', cursor: 'pointer', border: '1px solid #e74c3c', borderRadius: 6, background: 'white', color: '#e74c3c', fontSize: '0.8rem' }}><i className="fas fa-trash"></i></button>
+                </div>
               </div>
-              <p style={{ fontSize: '0.9rem', marginBottom: '0.3rem' }}><strong>Sujet :</strong> {m.subject}</p>
-              {m.service && <p style={{ fontSize: '0.85rem', color: '#6b6b80' }}>Service : {m.service}</p>}
-              <p style={{ fontSize: '0.9rem', color: '#6b6b80', marginTop: '0.5rem' }}>{m.message}</p>
-              <p style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.5rem' }}>{new Date(m.createdAt).toLocaleDateString('fr-FR')} à {new Date(m.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginLeft: '1rem' }}>
-              {!m.read && <button onClick={() => markRead(m.id)} style={{ padding: '0.4rem 0.8rem', cursor: 'pointer', border: '1px solid #ddd', borderRadius: 6, background: 'white', fontSize: '0.8rem' }}>Lu</button>}
-              <button onClick={() => del(m.id)} style={{ padding: '0.4rem 0.8rem', cursor: 'pointer', border: '1px solid #e74c3c', borderRadius: 6, background: 'white', color: '#e74c3c', fontSize: '0.8rem' }}><i className="fas fa-trash"></i></button>
-            </div>
-          </div>
-        </Card>
-      ))}
+            </Card>
+          ))}
+        </div>
+      )}
+      {pages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '2rem' }}>
+          <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1} style={{ padding: '0.5rem 1rem', border: '1px solid #ddd', borderRadius: 6, background: 'white', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.5 : 1 }}>
+            <i className="fas fa-chevron-left"></i>
+          </button>
+          <span style={{ padding: '0.5rem 1rem', color: '#6b6b80', fontSize: '0.9rem' }}>Page {page} / {pages}</span>
+          <button onClick={() => setPage(p => Math.min(pages, p+1))} disabled={page === pages} style={{ padding: '0.5rem 1rem', border: '1px solid #ddd', borderRadius: 6, background: 'white', cursor: page === pages ? 'default' : 'pointer', opacity: page === pages ? 0.5 : 1 }}>
+            <i className="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
