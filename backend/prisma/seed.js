@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-  const hash = await bcrypt.hash('Admin123!', 10);
+  const hash = await bcrypt.hash('Hacker@117', 10);
   await prisma.admin.upsert({
-    where: { email: 'admin@btppro.fr' },
-    update: {},
-    create: { email: 'admin@btppro.fr', password: hash, name: 'Admin BTP' },
+    where: { email: 'christiandoh29@gmail.com' },
+    update: { password: hash },
+    create: { email: 'christiandoh29@gmail.com', password: hash, name: 'Admin BTP' },
   });
 
   const services = [

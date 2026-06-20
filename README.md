@@ -99,8 +99,8 @@ docker-compose up
 | Accès | Identifiants |
 |-------|-------------|
 | **URL** | `http://localhost:3000/admin` |
-| **Email** | `admin@btppro.fr` |
-| **Mot de passe** | `Admin123!` |
+| **Email** | `christiandoh29@gmail.com` |
+| **Mot de passe** | `Hacker@117` |
 
 ### Dashboard
 
