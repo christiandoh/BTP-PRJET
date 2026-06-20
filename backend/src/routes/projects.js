@@ -1,7 +1,8 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const auth = require('../middleware/auth');
-const { validate, projectSchema } = require('../errors');
+const { validate } = require('../errors');
+const { projectSchema } = require('../validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
