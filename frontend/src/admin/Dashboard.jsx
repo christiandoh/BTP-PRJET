@@ -185,7 +185,7 @@ function ProjectsList() {
   const [form, setForm] = useState({ title: '', description: '', category: '', location: '', surface: '', imageUrl: '' })
 
   useEffect(() => { load() }, [])
-  const load = async () => { try { setList(await projectsApi.getAll()) } catch {} }
+  const load = async () => { try { const res = await projectsApi.getAll(); setList(Array.isArray(res) ? res : res.data || []) } catch {} }
 
   const openEdit = (p) => { setForm(p || { title: '', description: '', category: '', location: '', surface: '', imageUrl: '' }); setModal(p ? 'edit' : 'create') }
 
