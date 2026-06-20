@@ -205,7 +205,7 @@ function ProjectsList() {
       if (modal === 'create') await projectsApi.create(form)
       else await projectsApi.update(form.id, form)
       setModal(null); load()
-    } catch { alert('Erreur') }
+    } catch (err) { alert(err.response?.data?.error || err.message || 'Erreur') }
   }
 
   const del = async (id) => { if (confirm('Supprimer ce projet ?')) { await projectsApi.delete(id); load() } }
