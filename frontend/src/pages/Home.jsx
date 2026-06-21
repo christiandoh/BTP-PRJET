@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { services, testimonials } from '../api'
 
@@ -12,6 +12,7 @@ export default function Home() {
   const servicesRef = useRef([])
   const statsRef = useRef()
   const observerRef = useRef()
+  const [testimonialsList, setTestimonialsList] = useState([])
 
   useEffect(() => {
     const obs = new IntersectionObserver(entries => {
@@ -20,6 +21,10 @@ export default function Home() {
     observerRef.current = obs
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el))
     return () => obs.disconnect()
+  }, [])
+
+  useEffect(() => {
+    testimonials.getAll().then(setTestimonialsList).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -139,6 +144,37 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {testimonialsList.length > 0 && (
+        <section className="testimonials">
+          <div className="container">
+            <div className="section-header">
+              <span className="section-tag">Témoignages</span>
+              <h2>Ce que disent <span className="gold">nos clients</span></h2>
+              <p className="section-desc">La satisfaction de nos clients est notre plus belle récompense.</p>
+            </div>
+            <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+              {testimonialsList.map((t, i) => (
+                <div key={t.id || i} className="testimonial-card reveal" style={{ background: 'white', borderRadius: 16, padding: '2rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '1rem' }}>
+                    {Array.from({ length: t.rating || 5 }, (_, j) => (
+                      <i key={j} className="fas fa-star" style={{ color: '#C8A45C', fontSize: '0.9rem' }} />
+                    ))}
+                  </div>
+                  <p style={{ color: '#1a1a2e', lineHeight: 1.7, fontSize: '0.95rem', marginBottom: '1.5rem', fontStyle: 'italic' }}>"{t.content}"</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: t.avatarColor || '#C8A45C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.1rem' }}>{t.name?.charAt(0)}</div>
+                    <div>
+                      <strong style={{ fontSize: '0.9rem' }}>{t.name}</strong>
+                      <span style={{ display: 'block', fontSize: '0.8rem', color: '#6b6b80' }}>{t.role}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="stats-section" ref={statsRef}>
         <div className="container">
