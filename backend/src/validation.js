@@ -23,6 +23,7 @@ const testimonialSchema = z.object({
   content: z.string().min(10).max(1000),
   rating: z.number().int().min(1).max(5).optional().default(5),
   avatarColor: z.string().max(7).optional().default('#C8A45C'),
+  avatarUrl: z.string().max(500).optional().default(''),
 });
 
 const loginSchema = z.object({

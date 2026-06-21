@@ -261,19 +261,31 @@ function ProjectsList() {
 function TestimonialsList() {
   const [list, setList] = useState([])
   const [modal, setModal] = useState(null)
-  const [form, setForm] = useState({ name: '', role: '', content: '', rating: 5, avatarColor: '#C8A45C' })
+  const [uploading, setUploading] = useState(false)
+  const [form, setForm] = useState({ name: '', role: '', content: '', rating: 5, avatarColor: '#C8A45C', avatarUrl: '' })
 
   useEffect(() => { load() }, [])
   const load = async () => { try { setList(await testimonialsApi.getAll()) } catch {} }
 
-  const openEdit = (t) => { setForm(t || { name: '', role: '', content: '', rating: 5, avatarColor: '#C8A45C' }); setModal(t ? 'edit' : 'create') }
+  const openEdit = (t) => { setForm(t || { name: '', role: '', content: '', rating: 5, avatarColor: '#C8A45C', avatarUrl: '' }); setModal(t ? 'edit' : 'create') }
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const res = await uploadsApi.upload(file)
+      setForm({ ...form, avatarUrl: res.url })
+    } catch { alert("Erreur upload de l'avatar") }
+    setUploading(false)
+  }
 
   const save = async () => {
     try {
       if (modal === 'create') await testimonialsApi.create(form)
       else await testimonialsApi.update(form.id, form)
       setModal(null); load()
-    } catch { alert('Erreur') }
+    } catch (err) { alert(err.response?.data?.error || err.message || 'Erreur') }
   }
 
   const del = async (id) => { if (confirm('Supprimer ce témoignage ?')) { await testimonialsApi.delete(id); load() } }
@@ -306,6 +318,14 @@ function TestimonialsList() {
         <input placeholder="Nom" value={form.name} onChange={e => setForm({...form, name: e.target.value})} style={{ width: '100%', padding: '0.8rem', border: '1.5px solid #e8e8ee', borderRadius: 8, marginBottom: '0.8rem', fontFamily: 'inherit' }} />
         <input placeholder="Rôle" value={form.role} onChange={e => setForm({...form, role: e.target.value})} style={{ width: '100%', padding: '0.8rem', border: '1.5px solid #e8e8ee', borderRadius: 8, marginBottom: '0.8rem', fontFamily: 'inherit' }} />
         <textarea placeholder="Contenu du témoignage" value={form.content} onChange={e => setForm({...form, content: e.target.value})} rows={4} style={{ width: '100%', padding: '0.8rem', border: '1.5px solid #e8e8ee', borderRadius: 8, marginBottom: '0.8rem', fontFamily: 'inherit', resize: 'vertical' }}></textarea>
+        <div style={{ marginBottom: '0.8rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.8rem', border: '1.5px dashed #ccc', borderRadius: 8, cursor: 'pointer', fontSize: '0.9rem', color: '#6b6b80' }}>
+            <i className="fas fa-camera" style={{ fontSize: '1.2rem', color: '#C8A45C' }} />
+            {uploading ? 'Upload...' : form.avatarUrl ? 'Avatar ajouté ✓' : 'Ajouter une photo'}
+            <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
+          </label>
+          {form.avatarUrl && <img src={form.avatarUrl} alt="" style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', marginTop: '0.5rem' }} />}
+        </div>
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
           <button className="btn-primary" onClick={save} style={{ cursor: 'pointer' }}>Enregistrer</button>
           <button onClick={() => setModal(null)} style={{ padding: '0.9rem 2rem', border: '1px solid #ddd', borderRadius: 8, background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>Annuler</button>

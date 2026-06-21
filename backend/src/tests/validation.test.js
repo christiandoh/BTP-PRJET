@@ -53,9 +53,10 @@ describe('testimonialSchema', () => {
     const r = testimonialSchema.safeParse({ name: 'John', role: 'Client', content: 'Great work, very satisfied with the result' });
     expect(r.success).toBe(true);
   });
-  it('defaults rating to 5', () => {
+  it('defaults rating to 5 and avatarUrl to empty', () => {
     const r = testimonialSchema.safeParse({ name: 'John', role: 'Client', content: 'Great work, very satisfied with the result' });
     expect(r.data.rating).toBe(5);
+    expect(r.data.avatarUrl).toBe('');
   });
   it('rejects rating out of range', () => {
     const r = testimonialSchema.safeParse({ name: 'John', role: 'Client', content: 'Great work, very satisfied with the result', rating: 6 });

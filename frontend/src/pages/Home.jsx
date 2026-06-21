@@ -163,7 +163,11 @@ export default function Home() {
                   </div>
                   <p style={{ color: '#1a1a2e', lineHeight: 1.7, fontSize: '0.95rem', marginBottom: '1.5rem', fontStyle: 'italic' }}>"{t.content}"</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: t.avatarColor || '#C8A45C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.1rem' }}>{t.name?.charAt(0)}</div>
+                    {t.avatarUrl ? (
+                      <img src={t.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: t.avatarColor || '#C8A45C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.1rem' }}>{t.name?.charAt(0)}</div>
+                    )}
                     <div>
                       <strong style={{ fontSize: '0.9rem' }}>{t.name}</strong>
                       <span style={{ display: 'block', fontSize: '0.8rem', color: '#6b6b80' }}>{t.role}</span>
